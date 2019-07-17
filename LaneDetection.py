@@ -62,7 +62,6 @@ if __name__ == '__main__':
 
     # Open output files
     file = open('Output.txt', 'w')
-    file_loc = open('Output_Locations.txt', 'w')
 
     # Load data files
     leftCamFile = "C4-FirstDrive.MP4"
@@ -216,7 +215,7 @@ if __name__ == '__main__':
             else:
                 valid = False
 
-            timestamp = round(cqap1.get(cv2.CAP_PROP_POS_MSEC) / 1000, 2)
+            timestamp = round(cap1.get(cv2.CAP_PROP_POS_MSEC) / 1000, 2)
             print(str(timestamp))
             if valid:
                 #print("Valid")
