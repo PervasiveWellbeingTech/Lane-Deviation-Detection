@@ -36,9 +36,11 @@ if __name__ == '__main__':
     heightLeft = 500  # unused
 
     # Estimated width in meters of lane, car, and FOV of camera (assumed correct)
-    LANE_WIDTH = 3.35
+    LANE_WIDTH = 3.65 # 12 Feet
     CAR_WIDTH = 1.75
-    CAM_WIDTH = 1.52 # Not sure if this needs to be updated based on the new camera crops...
+    CAM_WIDTH = 1.15 # Not sure if this needs to be updated based on the new camera crops...
+
+    RightSideConversion = CAM_WIDTH
 
     # ?
     size = 100
@@ -216,7 +218,6 @@ if __name__ == '__main__':
                 valid = False
 
             timestamp = round(cap1.get(cv2.CAP_PROP_POS_MSEC) / 1000, 2)
-            print(str(timestamp))
             if valid:
                 #print("Valid")
                 if leftLines and rightLines:
@@ -241,18 +242,23 @@ if __name__ == '__main__':
                     timestamp = round(cap1.get(cv2.CAP_PROP_POS_MSEC) / 1000, 2)
                     timeList.append(str(timestamp))
 
-                    #if out:
-                    #    outList.append(1)
-                    #else:
-                    #    outList.append(0)
+                    if out:
+                        outList.append(1)
+                    else:
+                        outList.append(0)
 
                     averageDev = np.median(devList)
-                    posList.append(averageDev)
-                    leftList.append(avgMeters1)
-                    rightList.append(avgMeters2)
+                    posList.append('{:.2f}'.format(averageDev - 0.725))
+                    leftList.append('{:.2f}'.format(avgMeters1))
+                    rightList.append('{:.2f}'.format(avgMeters2))
                     timeCount = 0
                     devList = []
                     idx += 1
+                    print(str('{:.2f}'.format(round(timestamp, 2))) + " - Quality: B,  Deviation: " +
+                          str('{:.2f}'.format(round((averageDev - 0.725) * 3.25), 2)) + " ft, Left: " +
+                          str('{:.2f}'.format(round(avgMeters1 * 3.28, 2))) + " ft , Right: " +
+                          str('{:.2f}'.format(round((RightSideConversion - avgMeters2) * 3.28), 2)) + " ft")
+
 
             else:
                 timestamp = round(cap1.get(cv2.CAP_PROP_POS_MSEC) / 1000, 2)
@@ -260,21 +266,71 @@ if __name__ == '__main__':
                 timeCount += 20
 
                 if timeCount >= 200:
-                    timestamp = round(cap1.get(cv2.CAP_PROP_POS_MSEC) / 1000, 2)
-                    timeList.append(str(timestamp))
-
-                    #if out:
-                    #    outList.append(1)
-                    #else:
-                    #    outList.append(0)
-
-                    posList.append("?")
-                    leftList.append(avgMeters1)
-                    rightList.append(avgMeters2)
-
                     timeCount = 0
                     devList = []
-                    idx += 1
+
+                    '''
+                    Converting output to feet (1 meter = 3.28 feet)
+                    Position is roughly the deviation from the center of line, in feet, where 2.98 is half the
+                    width of the car (2.87 in feet)
+                    '''
+
+                    if avgMeters1 == "?":
+                        display1 = "?"
+
+                    else:
+                        display1 = str('{:.2f}'.format(round((avgMeters1 * 3.28), 2))) + " ft"
+
+                    if avgMeters2 == "?":
+                        display2 = "?"
+
+                    else:
+                        temp = RightSideConversion - avgMeters2
+                        display2 = str('{:.2f}'.format(round((temp * 3.28), 2))) + " ft"
+
+                    if display1 != "?":
+                        idx += 1
+                        timeList.append(str('{:.2f}'.format(timestamp)))
+
+                        if out:
+                            outList.append(1)
+                        else:
+                            outList.append(0)
+
+                        posList.append('{:.2f}'.format((-round(6 - ((avgMeters1 * 3.28) + 2.87), 2)) * 0.3048))
+                        print(str('{:.2f}'.format(round(timestamp, 2)))
+                              + " - Quality: L,  "
+                              + "Deviation: " + str('{:.2f}'.format(-round(6 - ((avgMeters1 * 3.28) + 2.87), 2)))
+                              + " ft, Left: " + display1
+                              + ", Right: " + display2)
+
+                        leftList.append('{:.2f}'.format(avgMeters1))
+                        rightList.append('?')
+
+                    elif display2 != "?":
+                        idx += 1
+                        timeList.append(str('{:.2f}'.format(timestamp)))
+
+                        if out:
+                            outList.append(1)
+                        else:
+                            outList.append(0)
+
+                        temp = RightSideConversion - avgMeters2
+                        posList.append('{:.2f}'.format(round(6 - ((temp * 3.28) + 2.87), 2) * 0.3048))
+                        print(str('{:.2f}'.format(round(timestamp, 2))) + " - Quality: R, "
+                              + "Deviation: " + str('{:.2f}'.format(round(6 - ((temp * 3.28) + 2.87), 2)))
+                              + " ft, Left: " + display1
+                              + ", Right: " + display2)
+
+                        leftList.append('?')
+                        rightList.append('{:.2f}'.format(avgMeters2))
+
+                    else:
+                        print(str('{:.2f}'.format(round(timestamp, 2))) + " - Quality: N, "
+                              + " Deviation: " + str("?")
+                              + ", Left: " + display1
+                              + ", Right: " + display2)
 
             ''' 
             Position the output videos with left video on left and right video on right
@@ -304,6 +360,9 @@ if __name__ == '__main__':
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+
+            #if timestamp > 15:
+            #    break
         else:
             break
 
@@ -337,17 +396,26 @@ if __name__ == '__main__':
     measurements = idx
     noDetections = 0
     percentPossibleDetection = 0
+    file.write("Time")
+    file.write(",")
+    file.write("Deviation")
+    file.write(",")
+    file.write("L_Dist")
+    file.write(",")
+    file.write("R_Dist")
+    file.write(",")
+    file.write("Departure")
+    file.write("\n")
     while idx > 0:
         file.write(timeList[curr])
-        file.write(" ")
+        file.write(",")
         file.write(str(posList[curr]))
-        file.write(" ")
-        #file.write(str(outList[curr]))
-        #file.write(" ")
+        file.write(",")
         file.write(str(leftList[curr]))
-        file.write(" ")
+        file.write(",")
         file.write(str(rightList[curr]))
-        file.write(" ")
+        file.write(",")
+        file.write(str(outList[curr]))
         file.write("\n")
 
         if posList[curr] == "?" and leftList[curr] == "?" and rightList[curr] == "?":
