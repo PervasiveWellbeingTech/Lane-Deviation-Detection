@@ -1,7 +1,8 @@
-/TestData
-/C4-FirstDrive.mp4
-/C6-FirstDrive.mp4
-/FirstDrive.prproj
 /.idea
-/Output.txt
+
+/Data
+/*.txt
+
 /*.csv
+
+/*.png

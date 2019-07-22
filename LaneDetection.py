@@ -36,25 +36,24 @@ if __name__ == '__main__':
     heightLeft = 500  # unused
 
     # Estimated width in meters of lane, car, and FOV of camera (assumed correct)
-    LANE_WIDTH = 3.65 # 12 Feet
-    CAR_WIDTH = 1.75
-    CAM_WIDTH = 1.15 # Not sure if this needs to be updated based on the new camera crops...
+    LANE_WIDTH = 3.65  # 12 Feet
+    CAR_WIDTH = 1.75  # Assumed correct
+    CAM_WIDTH = 1.15  # Updated based on the new camera crops...
 
     RightSideConversion = CAM_WIDTH
-
-    # ?
-    size = 100
 
     # white lane lines (related to color filter code below)
     # line_color = [([126, 129, 136], [126, 129, 136])]
 
     # arrays and variables that keep track of deviation and position for later averaging
-    leftList = []
-    rightList = []
+    leftList = []  # estimated distance between the wheel and the left lane
+    rightList = []  # estimated distance between the wheel and the right lane
     devList = []
     posList = []
-    timeList = []
-    outList = []
+    timeList = []  # timestamp of the measurement relative to the elapse time of the video
+    typeList = []  # quality of the detection:
+    # (2 = both lanes, -1 = left lane only, 1 = right lane only,
+    # 0 = no lanes detected because they either aren't there or the lighting is bad)
     idx = 0
     timeCount = 0
 
@@ -66,12 +65,13 @@ if __name__ == '__main__':
     file = open('Output.txt', 'w')
 
     # Load data files
-    leftCamFile = "C4-FirstDrive.MP4"
-    rightCamFile = "C6-FirstDrive.MP4"
+    leftCamFile = "Data\TestData\C4-FirstDrive.MP4"
+    rightCamFile = "Data\TestData\C6-FirstDrive.MP4"
     cap1 = cv2.VideoCapture(leftCamFile)
     cap2 = cv2.VideoCapture(rightCamFile)
 
     while True:
+        timestamp = round(cap1.get(cv2.CAP_PROP_POS_MSEC) / 1000, 2)
         ret1, frame1 = cap1.read()
         ret2, frame2 = cap2.read()
         avgMeters1 = "?"
@@ -170,7 +170,7 @@ if __name__ == '__main__':
                     avg1 = int(total / count)
                     avgMeters1 = CAM_WIDTH / VIDEO_HEIGHT * avg1
                     cv2.line(frame1_original, (0, avg1), (frame1[0].size, avg1), (255, 255, 0), 2)
-                    #print("Average Meters (Left): " + str(avgMeters1))
+
             else:
                 valid = False
 
@@ -212,57 +212,36 @@ if __name__ == '__main__':
                     avg2 = int(total / count)
                     avgMeters2 = CAM_WIDTH / VIDEO_HEIGHT * (VIDEO_HEIGHT - avg2)
                     cv2.line(frame2_original, (0, avg2), (frame2[0].size, avg2), (255, 255, 0), 2)
-                    #print("Average Meters (Right): " + str(avgMeters2))
 
             else:
                 valid = False
 
-            timestamp = round(cap1.get(cv2.CAP_PROP_POS_MSEC) / 1000, 2)
             if valid:
-                #print("Valid")
                 if leftLines and rightLines:
                     dev = avgMeters1 - avgMeters2
                     devList.append(dev)
 
-                '''
-                else:
-                    out = True
-                    if not leftLines and rightLines and avgMeters2 > LANE_WIDTH / 4:
-                        outLen = CAR_WIDTH - (LANE_WIDTH - avgMeters2)
-                        devList.append((LANE_WIDTH - CAR_WIDTH) / 2 + outLen)
-
-                    if not rightLines and leftLines and avgMeters1 > LANE_WIDTH:
-                        outLen = CAR_WIDTH - (LANE_WIDTH - avgMeters1)
-                        devList.append((LANE_WIDTH - CAR_WIDTH) / 2 + outLen)
-                '''
-
                 timeCount += 20
 
                 if timeCount >= 200 and len(devList) != 0:
-                    timestamp = round(cap1.get(cv2.CAP_PROP_POS_MSEC) / 1000, 2)
                     timeList.append(str(timestamp))
-
-                    if out:
-                        outList.append(1)
-                    else:
-                        outList.append(0)
-
                     averageDev = np.median(devList)
                     posList.append('{:.2f}'.format(averageDev - 0.725))
                     leftList.append('{:.2f}'.format(avgMeters1))
                     rightList.append('{:.2f}'.format(avgMeters2))
+                    typeList.append(2)
                     timeCount = 0
                     devList = []
                     idx += 1
+
+                    # noinspection PyTypeChecker
                     print(str('{:.2f}'.format(round(timestamp, 2))) + " - Quality: B,  Deviation: " +
                           str('{:.2f}'.format(round((averageDev - 0.725) * 3.25), 2)) + " ft, Left: " +
                           str('{:.2f}'.format(round(avgMeters1 * 3.28, 2))) + " ft , Right: " +
                           str('{:.2f}'.format(round((RightSideConversion - avgMeters2) * 3.28), 2)) + " ft")
 
-
             else:
                 timestamp = round(cap1.get(cv2.CAP_PROP_POS_MSEC) / 1000, 2)
-                #print("Not Valid: " + str(timestamp))
                 timeCount += 20
 
                 if timeCount >= 200:
@@ -291,12 +270,6 @@ if __name__ == '__main__':
                     if display1 != "?":
                         idx += 1
                         timeList.append(str('{:.2f}'.format(timestamp)))
-
-                        if out:
-                            outList.append(1)
-                        else:
-                            outList.append(0)
-
                         posList.append('{:.2f}'.format((-round(6 - ((avgMeters1 * 3.28) + 2.87), 2)) * 0.3048))
                         print(str('{:.2f}'.format(round(timestamp, 2)))
                               + " - Quality: L,  "
@@ -305,17 +278,12 @@ if __name__ == '__main__':
                               + ", Right: " + display2)
 
                         leftList.append('{:.2f}'.format(avgMeters1))
-                        rightList.append('?')
+                        rightList.append(None)
+                        typeList.append(-1)
 
                     elif display2 != "?":
                         idx += 1
                         timeList.append(str('{:.2f}'.format(timestamp)))
-
-                        if out:
-                            outList.append(1)
-                        else:
-                            outList.append(0)
-
                         temp = RightSideConversion - avgMeters2
                         posList.append('{:.2f}'.format(round(6 - ((temp * 3.28) + 2.87), 2) * 0.3048))
                         print(str('{:.2f}'.format(round(timestamp, 2))) + " - Quality: R, "
@@ -323,14 +291,21 @@ if __name__ == '__main__':
                               + " ft, Left: " + display1
                               + ", Right: " + display2)
 
-                        leftList.append('?')
+                        leftList.append(None)
                         rightList.append('{:.2f}'.format(avgMeters2))
+                        typeList.append(1)
 
                     else:
+                        idx += 1
+                        timeList.append(str('{:.2f}'.format(timestamp)))
+                        posList.append(None)
                         print(str('{:.2f}'.format(round(timestamp, 2))) + " - Quality: N, "
                               + " Deviation: " + str("?")
                               + ", Left: " + display1
                               + ", Right: " + display2)
+                        leftList.append(None)
+                        rightList.append(None)
+                        typeList.append(0)
 
             ''' 
             Position the output videos with left video on left and right video on right
@@ -361,8 +336,10 @@ if __name__ == '__main__':
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
-            #if timestamp > 15:
-            #    break
+            ''' Helpful for debugging purposes '''
+            # if timestamp > 15:
+            #     break
+
         else:
             break
 
@@ -379,18 +356,6 @@ if __name__ == '__main__':
 
         exit()
 
-    #averagePos = np.average(posList)
-    total = 0
-    num = 0
-
-    #for pos in posList:
-    #    total += (pos - averagePos) * (pos - averagePos)
-    #    num += 1
-
-    #sdlp = math.sqrt(total / num)
-    #file.write(str(sdlp))
-    #file.write("\n")
-
     print("Writing results...")
     curr = 0
     measurements = idx
@@ -398,28 +363,28 @@ if __name__ == '__main__':
     percentPossibleDetection = 0
     file.write("Time")
     file.write(",")
+    file.write("Quality")
+    file.write(",")
     file.write("Deviation")
     file.write(",")
     file.write("L_Dist")
     file.write(",")
     file.write("R_Dist")
-    file.write(",")
-    file.write("Departure")
     file.write("\n")
     while idx > 0:
         file.write(timeList[curr])
+        file.write(",")
+        file.write(str(typeList[curr]))
         file.write(",")
         file.write(str(posList[curr]))
         file.write(",")
         file.write(str(leftList[curr]))
         file.write(",")
         file.write(str(rightList[curr]))
-        file.write(",")
-        file.write(str(outList[curr]))
         file.write("\n")
 
-        if posList[curr] == "?" and leftList[curr] == "?" and rightList[curr] == "?":
-            noDetections = noDetections + 1
+        if posList[curr] is None and leftList[curr] is None and rightList[curr] is None:
+            noDetections += 1
 
         idx -= 1
         curr += 1
@@ -427,12 +392,9 @@ if __name__ == '__main__':
     cap1.release()
     cap2.release()
 
-    file.close()
-    file.close()
+    detections = "Detection rate: " + str('{:.2f}'.format(1 - (noDetections/measurements))) + " %"
+    print(detections)
+    file.write(detections + "\n")
 
+    file.close()
     cv2.destroyAllWindows()
-
-    if (1 - (noDetections/measurements)) == 1:
-        print("Detection rate: " + str(1 - (noDetections / measurements)) + "0%")
-    else:
-        print("Detection rate: " + str(1 - (noDetections/measurements)) + "%")
