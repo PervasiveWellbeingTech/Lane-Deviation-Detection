@@ -1,12 +1,12 @@
 # Load the Pandas libraries with alias 'pd' as so on...
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import math
 
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
 # Read data from file 'filename.csv'
-df = pd.read_csv("Output.csv")
+df = pd.read_csv("L1-FirstDrive-Output.csv")
 
 # Preview the first 5 lines of the loaded data
 print(df.head())
@@ -16,10 +16,9 @@ print(df.iloc[-1].Time)
 df.drop(df.tail(1).index, inplace=True)
 
 # Remove rows with 'None' deviation
-data = df[df['Deviation'] != 'None']
+data = df[df['Deviation'] != 'None'].copy(deep=True)
 
 # Convert columns necessary for current calculations
-data.is_copy = None
 data['Time'] = data['Time'].astype(float)
 data['Quality'] = data['Quality'].astype(int)
 data['Deviation'] = data['Deviation'].astype(float)
@@ -36,7 +35,7 @@ for idx, row in data.iterrows():
     data.loc[idx, 'RightRange'] = data.loc[idx, 'Deviation'] + 0.875
 
 # Plot Results
-for x in range(0, 8):
+for x in range(0, 3):
     subset = data[data['Time'] > x * 60]
     subset = subset[subset['Time'] <= (x + 1) * 60]
     dashes = [10, 5, 100, 5]
@@ -73,8 +72,7 @@ for x in range(0, 8):
             severe_count += 1
 
     # Calculate how much of the minute is covered by OpenCV
-    subset_2 = df
-    subset.is_copy = None
+    subset_2 = df.copy(deep=True)
     subset_2['Time'] = subset_2['Time'].astype(float)
     subset_2 = subset_2[subset_2['Time'] > x * 60]
     subset_2 = subset_2[subset_2['Time'] <= (x + 1) * 60]

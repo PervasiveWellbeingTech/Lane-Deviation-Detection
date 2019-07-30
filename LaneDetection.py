@@ -58,15 +58,15 @@ if __name__ == '__main__':
     timeCount = 0
 
     '''Start of scrubbing through video code below'''
-    skip_ahead = 75
+    skip_ahead = 150
     cur_pos = 0
 
     # Open output files
     file = open('Output.txt', 'w')
 
     # Load data files
-    leftCamFile = "Data\TestData\C4-FirstDrive.MP4"
-    rightCamFile = "Data\TestData\C6-FirstDrive.MP4"
+    leftCamFile = "Data\\L2\\Left\\L2_Left_ThirdDrive.MP4"
+    rightCamFile = "Data\\L2\\Right\\L2_Right_ThirdDrive.MP4"
     cap1 = cv2.VideoCapture(leftCamFile)
     cap2 = cv2.VideoCapture(rightCamFile)
 
@@ -227,18 +227,32 @@ if __name__ == '__main__':
                     timeList.append(str(timestamp))
                     averageDev = np.median(devList)
                     posList.append('{:.2f}'.format(averageDev - 0.725))
-                    leftList.append('{:.2f}'.format(avgMeters1))
-                    rightList.append('{:.2f}'.format(avgMeters2))
+
+                    try:
+                        leftList.append('{:.2f}'.format(avgMeters1))
+                    except ValueError:
+                        print("Value Error Handling: leftList.append() issue")
+                        leftList.append(None)
+
+                    try:
+                        rightList.append('{:.2f}'.format(avgMeters2))
+                    except ValueError:
+                        print("Value Error Handling: rightList.append() issue")
+                        leftList.append(None)
+
                     typeList.append(2)
                     timeCount = 0
                     devList = []
                     idx += 1
 
-                    # noinspection PyTypeChecker
-                    print(str('{:.2f}'.format(round(timestamp, 2))) + " - Quality: B,  Deviation: " +
-                          str('{:.2f}'.format(round((averageDev - 0.725) * 3.25), 2)) + " ft, Left: " +
-                          str('{:.2f}'.format(round(avgMeters1 * 3.28, 2))) + " ft , Right: " +
-                          str('{:.2f}'.format(round((RightSideConversion - avgMeters2) * 3.28), 2)) + " ft")
+                    try:
+                        # noinspection PyTypeChecker
+                        print(str('{:.2f}'.format(round(timestamp, 2))) + " - Quality: B,  Deviation: " +
+                              str('{:.2f}'.format(round((averageDev - 0.725) * 3.25), 2)) + " ft, Left: " +
+                              str('{:.2f}'.format(round(avgMeters1 * 3.28, 2))) + " ft , Right: " +
+                              str('{:.2f}'.format(round((RightSideConversion - avgMeters2) * 3.28), 2)) + " ft")
+                    except TypeError:
+                        print("Type Error Handling: Weird multiplication issue")
 
             else:
                 timestamp = round(cap1.get(cv2.CAP_PROP_POS_MSEC) / 1000, 2)
@@ -303,6 +317,7 @@ if __name__ == '__main__':
                               + " Deviation: " + str("?")
                               + ", Left: " + display1
                               + ", Right: " + display2)
+
                         leftList.append(None)
                         rightList.append(None)
                         typeList.append(0)
@@ -380,7 +395,13 @@ if __name__ == '__main__':
         file.write(",")
         file.write(str(leftList[curr]))
         file.write(",")
-        file.write(str(rightList[curr]))
+
+        try:
+            file.write(str(rightList[curr]))
+        except IndexError:
+            print("Index Error Handling: rightList[curr] issue")
+            file.write('None')
+
         file.write("\n")
 
         if posList[curr] is None and leftList[curr] is None and rightList[curr] is None:
@@ -392,7 +413,7 @@ if __name__ == '__main__':
     cap1.release()
     cap2.release()
 
-    detections = "Detection rate: " + str('{:.2f}'.format(1 - (noDetections/measurements))) + " %"
+    detections = "Detection rate: " + str('{:.2f}'.format(1 - (noDetections / measurements))) + " %"
     print(detections)
     file.write(detections + "\n")
 
