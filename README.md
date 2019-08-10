@@ -2,7 +2,7 @@
 
 # Process
 
-Assemble GoPro data into a directory of MP4s with each session containing folders for the left and right videos. Run MergeFiles.py to create one contiguous video based on the creatione timestamp. Then timecode each video to extract the 3 minutes from the familiarization drive and the 8 minutes for each of the next two drives in each session. This data needs to be added to a configuration file that CropFiles, LaneDetection, and LanePlot will all use. Once the data has been cropped/trimmed, Lane Detection can be applied to create a CSV of raw data. Finally, Lane Detection will filter, analyze, and plot this data. FilterScript is an auxillary script for looking at the results from an individual session.
+Assemble GoPro data into a directory of MP4s with each session containing folders for the left and right videos. Run MergeFiles.py to create one contiguous video based on the creation timestamp for each session and eash side. Then, manually timecode each video to extract the 3 minutes from the familiarization drive and the 8 minutes for each of the next two drives in each session. This data needs to be added to a configuration file that CropFiles, LaneDetection, and LanePlot will all use. Once the data has been cropped/trimmed, Lane Detection can be applied to create a CSV of raw data for each session. Finally, Lane Detection will filter, analyze, and plot this data. FilterScript is an auxillary script for looking at the results from an individual session.
 
 # File Overview
 
