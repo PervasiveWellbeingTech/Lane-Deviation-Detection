@@ -96,7 +96,7 @@ for y in range(0, len(files)):
 
         dashes = [10, 5, 100, 5]
 
-        # Standard Deviation of Center Line (Based on prior code)
+        # Deviation of Center Line (Based on prior code)
         total = 0
         num = 0
         averagePos = np.average(subset.Deviation)
