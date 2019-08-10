@@ -19,19 +19,33 @@ FilterScript.put - Does the same thing as LanePlot in terms of filtering, but al
 # Configuration File Schema
 
 Group - In the data folder will be Intervention and Control sub folders, tell the script in what folder the session is in.
+
 Participant - The participant ID, used to walk directories
+
 Video	- Left or Right side
+
 First_Start - Timecode for the start of the first drive used by CropFiles
+
 First_End	- Timecode for the end of the first drive used by CropFiles
+
 First_Duration - Duration of the video; unused but helpful for troubleshooting output
+
 Second_Start - Timecode for the start of the second drive used by CropFiles
+
 Second_End - Timecode for the end of the second drive used by CropFiles
+
 Second_Duration - Duration of the video; unused but helpful for troubleshooting output
+
 Third_Start - Timecode for the start of the third drive used by CropFiles
+
 Third_End - Timecode for the end of the third drive used by CropFiles
+
 Third_Duration - Duration of the video; unused but helpful for troubleshooting output
+
 Video_Duration - Duration of the video; unused but helpful for troubleshooting output
+
 crop_adjust	- adjust the crop window because the camera was installed wrong
+
 camera_flip - flip the camera because someone installed it upside down
 
 # Dependencies
