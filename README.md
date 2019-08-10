@@ -50,7 +50,7 @@ camera_flip - flip the camera because someone installed it upside down
 
 e.g.,
 
-![Image of Yaktocat](https://github.com/PervasiveWellbeingTech/Lane-Deviation-Detection/Images/ConfigExample.PNG)
+![Image of ConfigurationFile](https://github.com/PervasiveWellbeingTech/Lane-Deviation-Detection/imgs/ConfigExample.PNG)
 
 # Dependencies
 Relies on Python3 and PIP to install standard dependencies (e.g., numpy, pandas, matplotlib); the only non-standard package is the Kalman filter, but it too was easy to install with PIP. Tested using PyCharm IDE and a Windows 10 machine.
